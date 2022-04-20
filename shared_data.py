@@ -76,3 +76,18 @@ XM_PER_PIX = 3.7 / 781  # meters per pixel in x dimension
 left_curvem = None
 right_curvem = None
 center_offset = None
+
+# Global variables
+prev_leftx = None
+prev_lefty = None
+prev_rightx = None
+prev_righty = None
+prev_left_fit = []
+prev_right_fit = []
+
+prev_leftx2 = None
+prev_lefty2 = None
+prev_rightx2 = None
+prev_righty2 = None
+prev_left_fit2 = []
+prev_right_fit2 = []
