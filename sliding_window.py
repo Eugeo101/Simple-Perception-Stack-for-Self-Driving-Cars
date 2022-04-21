@@ -9,7 +9,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-def sliding_windows(self):
+def sliding_windows(self, plot=False):
     
     """
     Using the sliding windows technique, 
@@ -111,5 +111,84 @@ def sliding_windows(self):
     prev_lefty = lefty 
     prev_rightx = rightx
     prev_righty = righty
+
+    left_lane_inds = ((whitex > (left_fit[0]*(whitey**2) + left_fit[1]*whitey + left_fit[2] - self.margin)) & 
+                    (whitex < (left_fit[0]*(whitey**2) + left_fit[1]*whitey + left_fit[2] + self.margin))) 
+    right_lane_inds = ((whitex > (right_fit[0]*(whitey**2) + right_fit[1]*whitey + right_fit[2] - self.margin)) & 
+                    (whitex < (right_fit[0]*(whitey**2) + right_fit[1]*whitey + right_fit[2] + self.margin))) 			
+    self.left_lane_inds = left_lane_inds
+    self.right_lane_inds = right_lane_inds
+
+    leftx = whitex[left_lane_inds]
+    lefty = whitey[left_lane_inds] 
+    rightx = whitex[right_lane_inds]
+    righty = whitey[right_lane_inds]	
+
+    global prev_leftx2
+    global prev_lefty2 
+    global prev_rightx2
+    global prev_righty2
+    global prev_left_fit2
+    global prev_right_fit2
+
+    if len(leftx)==0 or len(lefty)==0 or len(rightx)==0 or len(righty)==0:
+      leftx = prev_leftx2
+      lefty = prev_lefty2
+      rightx = prev_rightx2
+      righty = prev_righty2
+
+    self.leftx = leftx
+    self.rightx = rightx
+    self.lefty = lefty
+    self.righty = righty
+		
+    left_fit = np.polyfit(lefty, leftx, 2)
+    right_fit = np.polyfit(righty, rightx, 2)
+
+    prev_left_fit2.append(left_fit)
+    prev_right_fit2.append(right_fit)
+
+    # Calculate the moving average	
+    if len(prev_left_fit2) > 10:
+      prev_left_fit2.pop(0)
+      prev_right_fit2.pop(0)
+      left_fit = sum(prev_left_fit2) / len(prev_left_fit2)
+      right_fit = sum(prev_right_fit2) / len(prev_right_fit2)
+
+    self.left_fit = left_fit
+    self.right_fit = right_fit
+		
+    prev_leftx2 = leftx
+    prev_lefty2 = lefty 
+    prev_rightx2 = rightx
+    prev_righty2 = righty
+
+    if plot==True:
+		
+      # Creating y and x values of the plot.
+      ploty = np.linspace(0, sliding_window_frame.shape[0]-1, sliding_window_frame.shape[0])
+      left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
+      right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
+
+      # Result image
+      out_img = np.dstack((sliding_window_frame, sliding_window_frame, (sliding_window_frame))) * 255
+			
+      # Left line in red and right one in blue.
+      out_img[whitey[left_lane_indices], whitex[left_lane_indices]] = [255, 0, 0]
+      out_img[whitey[right_lane_indices], whitex[right_lane_indices]] = [0, 0, 255]
+				
+      # Plot the figure with the sliding windows and the detected lanes.
+      figure, (ax1, ax2, ax3) = plt.subplots(3,1)
+      figure.set_size_inches(10, 10)
+      figure.tight_layout(pad=3.0)
+      ax1.imshow(cv2.cvtColor(self.orig_frame, cv2.COLOR_BGR2RGB))
+      ax2.imshow(sliding_window_frame, cmap='gray')
+      ax3.imshow(out_img)
+      ax3.plot(left_fitx, ploty, color='yellow')
+      ax3.plot(right_fitx, ploty, color='yellow')
+      ax1.set_title("Original Frame")  
+      ax2.set_title("Warped Frame with Sliding Windows")
+      ax3.set_title("Detected Lane Lines with Sliding Windows")
+      plt.show()
 
     return self.left_fit, self.right_fit
