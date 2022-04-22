@@ -3,10 +3,10 @@ import cv2
 import numpy as np
 
 
-def overlay_lane_lines():
+def fill_area_within_lanes():
     """
         output: area within the lanes filled in nonWarped perspective 
-                and in the bird-eye view    
+                and in the bird-eye view all in Black Background
     """
     # image to draw the lane lines on Considered as a plank channel
     warp_zero = np.zeros_like(shared_data.warped_frame)
@@ -50,11 +50,7 @@ def overlay_lane_lines():
     new_warp = cv2.warpPerspective(
         colored_warp, shared_data.inv_transformation_matrix, shared_data.orig_image_size)
 
-    # Combine the result with the original image, with alpha of the lane area equals .3
-    overlayed_frame = cv2.addWeighted(
-        shared_data.orig_frame, 1, new_warp, 0.3, 0)
-
-    return overlayed_frame, colored_warp
+    return new_warp, colored_warp
 
 
 def calculate_car_position():
