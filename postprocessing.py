@@ -72,13 +72,13 @@ def calculate_car_position():
     lane_center_px = lane_width_px / 2 + shared_data.left_fitx[-1]
 
     # The ratio between Meters and Pixels
-    M_PER_PX = shared_data.LANE_WIDTH_M / lane_width_px
+    shared_data.XM_PER_PX = shared_data.LANE_WIDTH_M / lane_width_px
 
     # The Difference between The center of the car and the center of the lane in PIXELS
     diff_car_pos_lane_center_px = car_position - lane_center_px
 
     # Calculating the offset from the center to the lane in CM
-    center_offset = diff_car_pos_lane_center_px * M_PER_PX * 100
+    center_offset = diff_car_pos_lane_center_px * shared_data.XM_PER_PX * 100
 
     shared_data.center_offset = center_offset
 
