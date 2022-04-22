@@ -72,6 +72,9 @@ righty = None
 YM_PER_PIX = 10.0 / 1000  # meters per pixel in y dimension
 XM_PER_PIX = 3.7 / 781  # meters per pixel in x dimension
 
+# the width of lane meters
+LANE_WIDTH_M = 3
+
 # Radii of curvature and offset
 left_curvem = None
 right_curvem = None

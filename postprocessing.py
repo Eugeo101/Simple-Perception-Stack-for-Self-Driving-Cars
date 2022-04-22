@@ -55,3 +55,28 @@ def overlay_lane_lines():
         shared_data.orig_frame, 1, new_warp, 0.3, 0)
 
     return overlayed_frame, colored_warp
+
+
+def calculate_car_position():
+    # The care position is in the center of the frame
+    car_position = shared_data.orig_frame.shape[1] / 2
+
+    # the width of the lane in PIXLES
+    # Taking the last pixel position from the left lane and the right lane
+    lane_width_px = shared_data.right_fitx[-1] - shared_data.left_fitx[-1]
+
+    # Calculating the Position of the center of the lane
+    lane_center_px = lane_width_px / 2 + shared_data.left_fitx[-1]
+
+    # The ratio between Meters and Pixels
+    M_PER_PX = shared_data.LANE_WIDTH_M / lane_width_px
+
+    # The Difference between The center of the car and the center of the lane in PIXELS
+    diff_car_pos_lane_center_px = car_position - lane_center_px
+
+    # Calculating the offset from the center to the lane in CM
+    center_offset = diff_car_pos_lane_center_px * M_PER_PX * 100
+
+    shared_data.center_offset = center_offset
+
+    return center_offset
