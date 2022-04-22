@@ -58,11 +58,14 @@ def overlay_lane_lines():
 
 
 def calculate_car_position():
-    # The care position is in the center of the frame
+    """
+        Output: The Offset between car position and the center of the lane
+    """
+    # The car position is in the center of the frame
     car_position = shared_data.orig_frame.shape[1] / 2
 
     # the width of the lane in PIXLES
-    # Taking the last pixel position from the left lane and the right lane
+    # Taking the lane width from the left lane and the right lane
     lane_width_px = shared_data.right_fitx[-1] - shared_data.left_fitx[-1]
 
     # Calculating the Position of the center of the lane
