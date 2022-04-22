@@ -65,7 +65,7 @@ def calculate_car_position():
     car_position = shared_data.orig_frame.shape[1] / 2
 
     # the width of the lane in PIXLES
-    # Taking the lane width from the left lane and the right lane
+    # Calculating the lane width from the left lane and the right lane
     lane_width_px = shared_data.right_fitx[-1] - shared_data.left_fitx[-1]
 
     # Calculating the Position of the center of the lane
