@@ -72,14 +72,35 @@ def calculate_car_position():
     lane_center_px = lane_width_px / 2 + shared_data.left_fitx[-1]
 
     # The ratio between Meters and Pixels
-    shared_data.XM_PER_PX = shared_data.LANE_WIDTH_M / lane_width_px
+    shared_data.XM_PER_PIX = shared_data.LANE_WIDTH_M / lane_width_px
 
     # The Difference between The center of the car and the center of the lane in PIXELS
     diff_car_pos_lane_center_px = car_position - lane_center_px
 
     # Calculating the offset from the center to the lane in CM
-    center_offset = diff_car_pos_lane_center_px * shared_data.XM_PER_PX * 100
+    center_offset = diff_car_pos_lane_center_px * shared_data.XM_PER_PIX * 100
 
     shared_data.center_offset = center_offset
 
     return center_offset
+
+
+def calculate_curvature():
+    # Fit polynomial curves on data with near real measurements 
+    left_fit_cr = np.polyfit(shared_data.lefty * shared_data.YM_PER_PIX,
+                             shared_data.leftx * shared_data.XM_PER_PIX, 2)
+    right_fit_cr = np.polyfit(shared_data.righty * shared_data.YM_PER_PIX,
+                              shared_data.rightx * shared_data.XM_PER_PIX, 2)
+
+    # Calculate the radii of curvature of each lane using the formula in the next link
+    # https://mathworld.wolfram.com/RadiusofCurvature.html
+    left_curvem = ((1 + (2 * left_fit_cr[0] * shared_data.YM_PER_PIX +
+                   left_fit_cr[1]) ** 2) ** 1.5) / np.absolute(2 * left_fit_cr[0])
+    right_curvem = ((1 + (2 * right_fit_cr[0] * shared_data.YM_PER_PIX +
+                    right_fit_cr[1]) ** 2) ** 1.5) / np.absolute(2 * right_fit_cr[0])
+
+    shared_data.left_curvem = left_curvem
+    shared_data.right_curvem = right_curvem
+
+    # returning the average
+    return (left_curvem + right_curvem) / 2
