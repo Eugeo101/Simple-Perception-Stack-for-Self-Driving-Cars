@@ -163,32 +163,57 @@ def sliding_windows(self, plot=False):
     prev_rightx2 = rightx
     prev_righty2 = righty
 
+    # Creating y and x values of the plot.
+    ploty = np.linspace(0, sliding_window_frame.shape[0]-1, sliding_window_frame.shape[0])
+    left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
+    right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
+
+    self.ploty = ploty
+    self.left_fitx = left_fitx
+    self.right_fitx = right_fitx
+
     if plot==True:
 		
-      # Creating y and x values of the plot.
-      ploty = np.linspace(0, sliding_window_frame.shape[0]-1, sliding_window_frame.shape[0])
-      left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
-      right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
-
       # Result image
       out_img = np.dstack((sliding_window_frame, sliding_window_frame, (sliding_window_frame))) * 255
 			
+      window_image = np.zeros_like(out_img)
+
       # Left line in red and right one in blue.
       out_img[whitey[left_lane_indices], whitex[left_lane_indices]] = [255, 0, 0]
       out_img[whitey[right_lane_indices], whitex[right_lane_indices]] = [0, 0, 255]
-				
+
+      # Show the area of the search window
+      # Creating the usable format for the fillpoly function.
+
+      left_line_window1 = np.array([np.transpose(np.vstack([left_fitx-self.margin, ploty]))])
+      left_line_window2 = np.array([np.flipud(np.transpose(np.vstack([left_fitx+self.margin, ploty])))])
+      left_line_pts = np.hstack((left_line_window1, left_line_window2))
+      right_line_window1 = np.array([np.transpose(np.vstack([right_fitx-self.margin, ploty]))])
+      right_line_window2 = np.array([np.flipud(np.transpose(np.vstack([right_fitx+self.margin, ploty])))])
+      right_line_pts = np.hstack((right_line_window1, right_line_window2))
+
+      cv2.fillPoly(window_image, np.int_([left_line_pts]), (0,255, 0))
+      cv2.fillPoly(window_image, np.int_([right_line_pts]), (0,255, 0))
+      result = cv2.addWeighted(out_img, 1, window_image, 0.3, 0)
+
       # Plot the figure with the sliding windows and the detected lanes.
-      figure, (ax1, ax2, ax3) = plt.subplots(3,1)
+      figure, axes = plt.subplots(3,2)
       figure.set_size_inches(10, 10)
       figure.tight_layout(pad=3.0)
-      ax1.imshow(cv2.cvtColor(self.orig_frame, cv2.COLOR_BGR2RGB))
-      ax2.imshow(sliding_window_frame, cmap='gray')
-      ax3.imshow(out_img)
-      ax3.plot(left_fitx, ploty, color='yellow')
-      ax3.plot(right_fitx, ploty, color='yellow')
-      ax1.set_title("Original Frame")  
-      ax2.set_title("Warped Frame with Sliding Windows")
-      ax3.set_title("Detected Lane Lines with Sliding Windows")
+      axes[0][1].set_visible(False)
+      axes[0][0].imshow(cv2.cvtColor(self.orig_frame, cv2.COLOR_BGR2RGB))
+      axes[1][0].imshow(sliding_window_frame, cmap='gray')
+      axes[2][0].imshow(out_img)
+      axes[2][0].plot(left_fitx, ploty, color='yellow')
+      axes[2][0].plot(right_fitx, ploty, color='yellow')
+      axes[1][1].imshow(self.warped_frame, cmap='gray')
+      axes[2][1].imshow(result)
+      axes[2][1].plot(left_fitx, ploty, color='yellow')
+      axes[2][1].plot(right_fitx, ploty, color='yellow')
+      axes[0][0].set_title("Original Frame")  
+      axes[1][0].set_title("Warped Frame with Sliding Windows")
+      axes[2][0].set_title("Detected Lane Lines with Sliding Windows")
+      axes[1][1].set_title("Warped Frame")
+      axes[2][1].set_title("Warped Frame With Search Window")
       plt.show()
-
-    return self.left_fit, self.right_fit
