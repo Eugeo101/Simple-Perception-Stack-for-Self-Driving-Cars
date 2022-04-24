@@ -18,7 +18,7 @@ def plot_ROI(frame = None, plot = False):
     else:
         return
 
-def Wrap_Presspective(src, dist, frame = None, plot = False):
+def Wrap_Presspective(frame = None, plot = False):
 """
 input: binary image
 description: wrap image ot birdview
@@ -26,8 +26,8 @@ output: image with lanes only
 """
     if frame is None:
 #             frame = Preprocessing(frame)
-shared_data.transformation_matrix = cv2.getPerspectiveTransform(src, dist)
-shared_data.inverse_transformation_matrix = cv2.getPerspectiveTransform(dist, src)
+shared_data.transformation_matrix = cv2.getPerspectiveTransform(shared_data.src, shared_data.dist)
+shared_data.inverse_transformation_matrix = cv2.getPerspectiveTransform(shared_data.dist, shared_data.src)
 shared_data.warped_frame = cv2.warpPerspective(frame, shared_data.transformation_matrix, frame.shape[1::-1], flags=(cv2.INTER_LINEAR))
 
 if plot == True:
