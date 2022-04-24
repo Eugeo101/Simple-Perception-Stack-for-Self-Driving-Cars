@@ -1,9 +1,11 @@
 import shared_data
 
 def plot_ROI(frame = None, plot = False):
-    #input img
-    #output get image with ROI
-    
+    """
+    input: image
+    description: using cv2.polylines
+    output: get image with ROI
+    """
     if frame == None:
         frame = shared_data.orig_frame.copy()
     if plot == True:
@@ -15,3 +17,20 @@ def plot_ROI(frame = None, plot = False):
         plt.axis("off")
     else:
         return
+
+def Wrap_Presspective(src, dist, frame = None, plot = False):
+"""
+input: binary image
+description: wrap image ot birdview
+output: image with lanes only
+"""
+    if frame is None:
+#             frame = Preprocessing(frame)
+shared_data.transformation_matrix = cv2.getPerspectiveTransform(src, dist)
+shared_data.inverse_transformation_matrix = cv2.getPerspectiveTransform(dist, src)
+shared_data.warped_frame = cv2.warpPerspective(frame, shared_data.transformation_matrix, frame.shape[1::-1], flags=(cv2.INTER_LINEAR))
+
+if plot == True:
+    copy_wraped = warped_frame.copy()
+    plot_ROI(src=dist, frame= copy_wraped, plot = True)
+return warped_frame
