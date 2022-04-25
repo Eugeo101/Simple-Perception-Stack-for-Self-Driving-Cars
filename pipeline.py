@@ -7,7 +7,11 @@ def main(input_video_path, output_video_path, debug_mode):
     # Create a VideoCapture object and read from input file path
     cap = cv2.VideoCapture(input_video_path)
 
+<<<<<<< HEAD
     # Check if The input video path is valid
+=======
+    # Check if camera opened successfully
+>>>>>>> 20d37c448ffe4ae69ea42f237f49482d408d6bd1
     if (cap.isOpened() == False):
         print("Error opening video stream or file")
 
