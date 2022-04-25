@@ -270,7 +270,9 @@ def Preprocessing(frame = None, plot = False):
         show_image(lane_line_markings, "final image")
         plt.show()
     
-    lane_line_markings = cv2.bitwise_and(lane_line_markings, result_yw)
+    result_image = cv2.bitwise_and(lane_line_markings, result_yw)
     if plot == True:
-        show_image(lane_line_markings)
+        show_image(result_image)
+    
+    shared_data.lane_line_markings = lane_line_markings
     return lane_line_markings
