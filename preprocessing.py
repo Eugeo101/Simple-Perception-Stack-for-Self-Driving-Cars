@@ -1,4 +1,7 @@
 import shared_data
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
 
 def show_image(image, title= "Image", cmap_type = 'gray'):
     plt.imshow(image, cmap_type)
@@ -30,21 +33,22 @@ def plot_ROI(frame = None, plot = False):
         return
 
 def Wrap_Presspective(frame = None, plot = False):
-"""
-input: binary image
-description: wrap image ot birdview
-output: image with lanes only
-"""
+    """
+    input: binary image
+    description: wrap image ot birdview
+    output: image with lanes only
+    """
     if frame is None:
         frame = shared_data.orig_frame.copy()
-shared_data.transformation_matrix = cv2.getPerspectiveTransform(shared_data.src, shared_data.dist)
-shared_data.inverse_transformation_matrix = cv2.getPerspectiveTransform(shared_data.dist, shared_data.src)
-shared_data.warped_frame = cv2.warpPerspective(frame, shared_data.transformation_matrix, frame.shape[1::-1], flags=(cv2.INTER_LINEAR))
+        shared_data.transformation_matrix = cv2.getPerspectiveTransform(shared_data.src, shared_data.dist)
+        shared_data.inverse_transformation_matrix = cv2.getPerspectiveTransform(shared_data.dist, shared_data.src)
+        shared_data.warped_frame = cv2.warpPerspective(frame, shared_data.transformation_matrix, frame.shape[1::-1], flags=(cv2.INTER_LINEAR))
 
-if plot == True:
-    copy_wraped = warped_frame.copy()
-    plot_ROI(src=dist, frame= copy_wraped, plot = True)
-return warped_frame
+    if plot == True:
+        copy_wraped = shared_data.warped_frame.copy()
+        plot_ROI(src=shared_data.dist, frame= copy_wraped, plot = True)
+        
+    return shared_data.warped_frame
 
 
 def binary_array(array, thresh, value=0):
