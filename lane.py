@@ -119,7 +119,6 @@ class Lane:
         descripiton: Contrast - Color - GaussianBlur
         output: image with yellow and white lines only
         """
-        from skimage import morphology
         if frame is None:
             frame = self.orig_frame
 
