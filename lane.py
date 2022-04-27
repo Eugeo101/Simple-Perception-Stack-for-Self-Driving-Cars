@@ -3,7 +3,6 @@ import numpy as np  # Import the NumPy scientific computing library
 import preprocessing as pre  # Handles the detection of lane lines
 import matplotlib.pyplot as plt  # Used for plotting and error checking
 
-filename = '../test_images/EasyFolder/frame1000.jpg '
 
 # Global variables
 prev_leftx = None
@@ -606,9 +605,9 @@ class Lane:
 
         # Left line in red and right one in blue.
         out_img[whitey[left_lane_indices],
-                whitex[left_lane_indices]] = [255, 0, 0]
+                whitex[left_lane_indices]] = [0, 0, 255]
         out_img[whitey[right_lane_indices],
-                whitex[right_lane_indices]] = [0, 0, 255]
+                whitex[right_lane_indices]] = [255, 0, 0]
 
         # Show the area of the search window
         # Creating the usable format for the fillpoly function.
