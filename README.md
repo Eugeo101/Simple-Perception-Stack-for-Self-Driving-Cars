@@ -3,9 +3,10 @@
 ## Required Libraries
 `OpenCV, Matplotlib, Numpy, tqdm`
 
+You Add The Input video to the project folder and then run this line in terminal
 ## No Debugging
 ```bash
-bash perception.sh project_video.mp4 ouput_project_video.mp4 debug_mode=0
+bash perception.sh input_video.mp4 ouput_video.mp4 debug_mode=0
     
 ```
 <p align="left">
@@ -14,7 +15,7 @@ bash perception.sh project_video.mp4 ouput_project_video.mp4 debug_mode=0
 
 ## Debugging
 ```bash
-bash perception.sh project_video.mp4 output_debug_project_video.mp4 debug_mode=1
+bash perception.sh input_video.mp4 ouput_video.mp4 debug_mode=1
     
 ```
 <p align="left">
