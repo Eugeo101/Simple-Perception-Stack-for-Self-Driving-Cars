@@ -5,7 +5,7 @@
 To make sure you are fully equipped copy the following lines and paste them in terminal
 ```bash
 sudo apt install python3-opencv
-sudo apt install python-pip
+sudo apt install python-numpy
 sudo apt-get install python3-matplotlib
 sudo apt install python3-tqdm   
 
