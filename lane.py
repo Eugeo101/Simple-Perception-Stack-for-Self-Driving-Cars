@@ -215,34 +215,6 @@ class Lane:
             pre.show_image(result_yw, 'yellow or white result')
             plt.show()
 
-#         lower_gray = np.array([0, 0, 40])
-#         upper_gray = np.array([180, 10, 120])
-
-#         mask_gray = cv2.inRange(hls, lower_gray, upper_gray)
-
-#         if plot == True:
-#             show_image_BGR(mask_gray, 'gray mask')
-#             plt.show()
-
-#         result_gray = cv2.bitwise_and(frame, frame, mask= mask_gray)
-
-#         if plot == True:
-#             show_image_BGR(result_gray, 'gray of orignal frame')
-#             plt.show()
-
-#         b, g, r = cv2.split(result_gray)
-#         result_gray = g
-#         _, result_gray = cv2.threshold(result_white, 120, 255, cv2.THRESH_BINARY)
-
-#         if plot == True:
-#             show_image_BGR(result_gray, 'gray thresholded of orignal frame')
-#             plt.show()
-
-#         result_ywg = cv2.bitwise_or(result_white, result_yellow, result_gray)
-
-#         if plot == True:
-#             show_image_BGR(result_ywg, 'ywg result')
-#             plt.show()
 
         ###############################yellow or white image is output now get lane defination#################################
 
@@ -278,16 +250,6 @@ class Lane:
             plt.show()
 
         #####################################remove noise of binary image by open morphology#####################################
-    #     kernel = np.ones((2, 2), np.uint8)
-    #     opened_edges = cv2.morphologyEx(L_edges_binary, cv2.MORPH_OPEN, kernel)
-    #     show_image(opened_edges, "Morphology")
-    #     plt.show()
-
-        # for i in range(5):
-        #     opened_edges = morphology.binary_erosion(opened_edges)
-        #     show_image(opened_edges, i)
-        #     plt.show()
-
         # assumed lane lines are pure color (solid white, solid yellow)
         # White in the regions with the purest hue colors (e.g. >80...play with
         # this value for best results).
@@ -359,24 +321,8 @@ class Lane:
             plt.show()
         self.lane_line_markings = result_image
 
-        # Gaussian Blur to remove edge noises
-#         k = 3
-#         self.lane_line_markings = cv2.GaussianBlur(self.lane_line_markings, (k, k), 0)
-#         if plot == True:
-#             show_image(self.lane_line_markings, "Gaussian blur of result")
-#             plt.show()
         return self.lane_line_markings
-#         self.lane_line_markings = cv2.bitwise_or(gs_binary, L_edges_binary.astype(np.uint8))
-#         if plot == True:
-#             show_image(self.lane_line_markings, "final image")
-#             plt.show()
 
-#         result_image = cv2.bitwise_or(self.lane_line_markings, result_yw)
-#         if plot == True:
-#             show_image(result_image, "YorW & lines_with_edges")
-#             plt.show()
-#         self.lane_line_markings = result_image
-#         return self.lane_line_markings
 
     def Wrap_Presspective(self, frame=None, plot=False):
         """
