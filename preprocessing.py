@@ -37,7 +37,7 @@ def binary_array(array, thresh, value=0):
         # Creates an array of zeros with the same shape and type as
         # the input 2D array.
         binary = np.zeros_like(array)
-        value = 1
+        value = 255
 
     # If value == 0, make all values in binary equal to 0 if the
     # corresponding value in the input array is between the threshold
