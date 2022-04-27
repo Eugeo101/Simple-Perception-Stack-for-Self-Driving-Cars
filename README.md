@@ -10,7 +10,7 @@ sudo apt-get install python3-matplotlib
 sudo apt install python3-tqdm   
 
 ```
-You Add The Input video to the project folder and then run this line in terminal
+You Add The Input video to the project folder and then run one these lines in terminal
 ## No Debugging
 ```bash
 bash perception.sh input_video.mp4 ouput_video.mp4 debug_mode=0  
