@@ -26,6 +26,7 @@ total_offset = 0
 avg_offset = 0
 frame_count = 0
 
+filename = None
 
 class Lane:
     """
@@ -64,7 +65,7 @@ class Lane:
             (1092, 636),
             (756, 450)
         ])
-
+        self.roi_img = None
         # The desired corner locations  of the region of interest
         # after we perform perspective transformation.
         # Assume image width of 600, padding == 150.
@@ -87,6 +88,30 @@ class Lane:
         # Min no. of pixels to recenter window
         self.minpix = int((1/24) * width)
 
+        self.s_threshold = 80
+
+        if (filename == 'challenge_video.mp4'):
+            self.roi_points = np.float32([(639, 473),  # Top-left corner
+                                          (327, 686),  # Bottom-left corner
+                                          (1062, 690),  # Bottom-right corner
+                                          (738, 474)  # Top-right corner
+                                          ])  # challenge
+            self.s_threshold = 10
+            self.margin = int((1/48) * width)
+        if (filename == 'project_video.mp4'):
+            self.roi_points = np.float32([(562, 441),  # Top-left corner
+                                          (310, 677),  # Bottom-left corner
+                                          (1079, 670),  # Bottom-right corner
+                                          (665, 442)  # Top-right corner
+                                          ])  # project
+        if (filename == 'harder_challenge_video.mp4'):
+            self.roi_points = np.float32([(592, 500),  # Top-left corner
+                                          (319, 684),  # Bottom-left corner
+                                          (1048, 685),  # Bottom-right corner
+                                          (768, 498)  # Top-right corner
+                                          ])  # hard
+            self.s_threshold = 150
+
         # Best fit polynomial lines for left line and right line of the lane
         self.left_fit = None
         self.right_fit = None
@@ -100,6 +125,9 @@ class Lane:
         self.lefty = None
         self.righty = None
 
+        # contains Thresholded Warped Lanes with fitted lines overlayed over them
+        self.warped_with_lines = None
+        self.sliding_window_frame = None
         # Pixel parameters for x and y dimensions
         self.YM_PER_PIX = 7.0 / 400  # meters per pixel in y dimension
         self.XM_PER_PIX = 3.7 / 255  # meters per pixel in x dimension
@@ -121,54 +149,102 @@ class Lane:
         """
         if frame is None:
             frame = self.orig_frame
-
         hls = cv2.cvtColor(frame, cv2.COLOR_BGR2HLS)
 
+        if plot == True:
+            pre.show_image_BGR(frame, 'orignal frame')
+            plt.show()
+
         # define range of yellow color in HLS
-        lower_yellow = np.array([20, 50, 50])
-        upper_yellow = np.array([40, 255, 255])
+        lower_yellow = np.array([20, 102, 60])
+        upper_yellow = np.array([40, 255, 130])
         # Threshold the HLS image to get only yellow colors
         mask_yellow = cv2.inRange(hls, lower_yellow, upper_yellow)
+        if plot == True:
+            pre.show_image(mask_yellow, 'yellow mask')
+            plt.show()
+
         # Bitwise-AND mask and original image
         result_yellow = cv2.bitwise_and(frame, frame, mask=mask_yellow)
+
+        if plot == True:
+            pre.show_image_BGR(result_yellow, 'yellow of orignal frame')
+            plt.show()
 
         b, g, r = cv2.split(result_yellow)
         result_yellow = g
         _, result_yellow = cv2.threshold(
             result_yellow, 120, 255, cv2.THRESH_BINARY)
 
-        lower_white = np.array([0, 0, 255])
-        upper_white = np.array([180, 255, 255])
+        if plot == True:
+            pre.show_image(
+                result_yellow, 'yellow thersholded of orignal frame')
+            plt.show()
+
+        lower_white = np.array([0, 200, 0])
+        upper_white = np.array([40, 255, 50])
+
+#         lower_white = np.array([0, 110, 0])
+#         upper_white = np.array([40, 255, 50])
+
         # Threshold the HLS image to get only yellow colors
         mask_white = cv2.inRange(hls, lower_white, upper_white)
+
+        if plot == True:
+            pre.show_image(mask_white, 'white mask')
+            plt.show()
+
         # Bitwise-AND mask and original image
         result_white = cv2.bitwise_and(frame, frame, mask=mask_white)
+
+        if plot == True:
+            pre.show_image_BGR(result_white, 'white of orignal frame')
+            plt.show()
 
         b, g, r = cv2.split(result_white)
         result_white = g
         _, result_white = cv2.threshold(
-            result_white, 120, 255, cv2.THRESH_BINARY)
+            result_white, 130, 255, cv2.THRESH_BINARY)
+
+        if plot == True:
+            pre.show_image(result_white, 'white thersholded of orignal frame')
+            plt.show()
 
         result_yw = cv2.bitwise_or(result_white, result_yellow)
 
         if plot == True:
-            pre.show_image_BGR(frame, 'orignal frame')
-            plt.show()
-            pre.show_image(mask_yellow, 'yellow mask')
-            plt.show()
-            pre.show_image(result_yellow, 'yellow of orignal frame')
-            plt.show()
-            pre.show_image(
-                result_yellow, 'yellow thersholded of orignal frame')
-            plt.show()
-        #         show_image(mask_white, 'white mask')
-        #         plt.show()
-        #         show_image(result_white, 'white of orignal frame')
-        #         plt.show()
-            pre.show_image(result_white, 'white thersholded of orignal frame')
-            plt.show()
             pre.show_image(result_yw, 'yellow or white result')
             plt.show()
+
+#         lower_gray = np.array([0, 0, 40])
+#         upper_gray = np.array([180, 10, 120])
+
+#         mask_gray = cv2.inRange(hls, lower_gray, upper_gray)
+
+#         if plot == True:
+#             show_image_BGR(mask_gray, 'gray mask')
+#             plt.show()
+
+#         result_gray = cv2.bitwise_and(frame, frame, mask= mask_gray)
+
+#         if plot == True:
+#             show_image_BGR(result_gray, 'gray of orignal frame')
+#             plt.show()
+
+#         b, g, r = cv2.split(result_gray)
+#         result_gray = g
+#         _, result_gray = cv2.threshold(result_white, 120, 255, cv2.THRESH_BINARY)
+
+#         if plot == True:
+#             show_image_BGR(result_gray, 'gray thresholded of orignal frame')
+#             plt.show()
+
+#         result_ywg = cv2.bitwise_or(result_white, result_yellow, result_gray)
+
+#         if plot == True:
+#             show_image_BGR(result_ywg, 'ywg result')
+#             plt.show()
+
         ###############################yellow or white image is output now get lane defination#################################
 
         ################### Isolate possible lane line edges ######################
@@ -195,8 +271,8 @@ class Lane:
         # 1s will be in the cells with the highest Sobel derivative values
         # (i.e. strongest lane line edges)
         L_edges_binary = pre.mag_thresh(
-            L_channel_binary, sobel_kernel=3, thresh=(80, 255), value=1)  # -ve -> +ve
-        # L_edges_binary = edge.canny_detection(L_channel_binary, thresh = (80, 150)) #0 -> 255
+            L_channel_binary, sobel_kernel=3, thresh=(110, 255), value=1)  # -ve -> +ve
+#         L_edges_binary = canny_detection(L_channel_binary, thresh = (50, 150)) #0 -> 255
 
         if plot == True:
             pre.show_image(L_edges_binary, 'Edges L_channel Thersholded')
@@ -222,7 +298,8 @@ class Lane:
             pre.show_image(s_channel, 's channel')
             plt.show()
 
-        _, s_binary = cv2.threshold(s_channel, 80, 255, cv2.THRESH_BINARY)
+        _, s_binary = cv2.threshold(
+            s_channel, self.s_threshold, 255, cv2.THRESH_BINARY)
 
         if plot == True:
             pre.show_image(s_binary, 'S Binary Thersholded')
@@ -235,13 +312,13 @@ class Lane:
         b, g, r = cv2.split(frame)
 
         if plot == True:
-            pre.show_image(g, 'G channel')
+            pre.show_image(r, 'G channel')
             plt.show()
 
-        _, g_thresh = cv2.threshold(g, 120, 255, cv2.THRESH_BINARY)
+        _, g_thresh = cv2.threshold(r, 120, 255, cv2.THRESH_BINARY)
 
         if plot == True:
-            pre. show_image(g_thresh, 'G Binary Thersholded')
+            pre.show_image(g_thresh, 'G Binary Thersholded')
             plt.show()
 
         # Lane lines should be pure in color and have high red channel values
@@ -259,18 +336,48 @@ class Lane:
         # from this return value. The edges of lane lines are thin lines of pixels.
 
         self.lane_line_markings = cv2.bitwise_or(
-            gs_binary, L_edges_binary.astype(np.uint8))
-        if plot == True:
-            pre.show_image(self.lane_line_markings, "final image")
-            plt.show()
+            result_yw, L_edges_binary.astype(np.uint8))
+        mask = np.zeros_like(self.lane_line_markings)
+        roi_points = self.roi_points.copy()
+        roi_points[0, 0] = roi_points[0, 0] - 20
+        roi_points[1, 0] = roi_points[1, 0] - 20
+        roi_points[2, 0] = roi_points[2, 0] - 20
+        roi_points[3, 0] = roi_points[3, 0] + 20
 
-        result_image = cv2.bitwise_and(self.lane_line_markings, result_yw)
+        roi_points[0, 1] = roi_points[0, 1] - 20
+        roi_points[1, 1] = roi_points[1, 1] + 20
+        roi_points[2, 1] = roi_points[2, 1] + 20
+        roi_points[3, 1] = roi_points[3, 1] - 20
+        cv2.fillPoly(mask, np.int_([roi_points]), 255)
+        self.lane_line_markings = cv2.bitwise_and(
+            self.lane_line_markings, mask)
         if plot == True:
-            pre.show_image(result_image, "YorW & lines_with_edges")
+            pre.show_image(self.lane_line_markings, "edges or yw in ROI image")
             plt.show()
-#         self.lane_line_markings = result_image
+        result_image = cv2.bitwise_or(self.lane_line_markings, gs_binary)
+        if plot == True:
+            pre.show_image(result_image, "YorW or lines_with_edges")
+            plt.show()
+        self.lane_line_markings = result_image
+
+        # Gaussian Blur to remove edge noises
+#         k = 3
+#         self.lane_line_markings = cv2.GaussianBlur(self.lane_line_markings, (k, k), 0)
+#         if plot == True:
+#             show_image(self.lane_line_markings, "Gaussian blur of result")
+#             plt.show()
         return self.lane_line_markings
-#         return result_image
+#         self.lane_line_markings = cv2.bitwise_or(gs_binary, L_edges_binary.astype(np.uint8))
+#         if plot == True:
+#             show_image(self.lane_line_markings, "final image")
+#             plt.show()
+
+#         result_image = cv2.bitwise_or(self.lane_line_markings, result_yw)
+#         if plot == True:
+#             show_image(result_image, "YorW & lines_with_edges")
+#             plt.show()
+#         self.lane_line_markings = result_image
+#         return self.lane_line_markings
 
     def Wrap_Presspective(self, frame=None, plot=False):
         """
@@ -310,18 +417,19 @@ class Lane:
         """
         if frame == None:
             frame = self.orig_frame.copy()
+
+        #cv2.polylines(image, [pts], isClosed, color, thickness)
+        roi_img = cv2.polylines(frame, np.int32(
+            [self.roi_points]), True, (23, 14, 217), 3)
+        self.roi_img = roi_img
+
         if plot == True:
-            #cv2.polylines(image, [pts], isClosed, color, thickness)
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            roi_img = cv2.polylines(frame, np.int32(
-                [self.roi_points]), True, (217, 14, 23), 3)
+            roi_img = cv2.cvtColor(roi_img, cv2.COLOR_BGR2RGB)
             plt.imshow(roi_img)
             plt.title("ROI Image")
             plt.axis("off")
-        else:
-            return
 
-        cv2.destroyAllWindows()
+            cv2.destroyAllWindows()
 
     def sliding_windows(self, plot=False):
         """
@@ -487,39 +595,59 @@ class Lane:
         self.left_fitx = left_fitx
         self.right_fitx = right_fitx
 
+        # lanes with sliding windows on top of the lanes
+        self.sliding_window_frame = sliding_window_frame
+
+        # Result image
+        out_img = np.dstack(
+            (sliding_window_frame, sliding_window_frame, (sliding_window_frame))) * 255
+        window_image = np.zeros_like(out_img)
+        lane_line_img = np.zeros_like(out_img)
+
+        # Left line in red and right one in blue.
+        out_img[whitey[left_lane_indices],
+                whitex[left_lane_indices]] = [255, 0, 0]
+        out_img[whitey[right_lane_indices],
+                whitex[right_lane_indices]] = [0, 0, 255]
+
+        # Show the area of the search window
+        # Creating the usable format for the fillpoly function.
+
+        left_line_window1 = np.array(
+            [np.transpose(np.vstack([left_fitx-self.margin, ploty]))])
+        left_line_window2 = np.array(
+            [np.flipud(np.transpose(np.vstack([left_fitx+self.margin, ploty])))])
+        left_line_pts = np.hstack((left_line_window1, left_line_window2))
+        right_line_window1 = np.array(
+            [np.transpose(np.vstack([right_fitx-self.margin, ploty]))])
+        right_line_window2 = np.array(
+            [np.flipud(np.transpose(np.vstack([right_fitx+self.margin, ploty])))])
+        right_line_pts = np.hstack(
+            (right_line_window1, right_line_window2))
+
+        cv2.fillPoly(window_image, np.int_([left_line_pts]), (0, 255, 0))
+        cv2.fillPoly(window_image, np.int_([right_line_pts]), (0, 255, 0))
+        result = cv2.addWeighted(out_img, 1, window_image, 0.3, 0)
+        
+        # Show The lines
+        left_line_window1 = np.array(
+            [np.transpose(np.vstack([left_fitx-3, ploty]))])
+        left_line_window2 = np.array(
+            [np.flipud(np.transpose(np.vstack([left_fitx+3, ploty])))])
+        left_line_pts = np.hstack((left_line_window1, left_line_window2))
+        right_line_window1 = np.array(
+            [np.transpose(np.vstack([right_fitx-3, ploty]))])
+        right_line_window2 = np.array(
+            [np.flipud(np.transpose(np.vstack([right_fitx+3, ploty])))])
+        right_line_pts = np.hstack(
+            (right_line_window1, right_line_window2))
+
+        cv2.fillPoly(lane_line_img, np.int_([left_line_pts]), (0,255,255))
+        cv2.fillPoly(lane_line_img, np.int_([right_line_pts]),(0,255,255))
+        self.warped_with_lines = cv2.addWeighted(
+            result, 1, lane_line_img, 1, 0)
+    
         if plot == True:
-
-            # Result image
-            out_img = np.dstack(
-                (sliding_window_frame, sliding_window_frame, (sliding_window_frame))) * 255
-
-            window_image = np.zeros_like(out_img)
-
-            # Left line in red and right one in blue.
-            out_img[whitey[left_lane_indices],
-                    whitex[left_lane_indices]] = [255, 0, 0]
-            out_img[whitey[right_lane_indices],
-                    whitex[right_lane_indices]] = [0, 0, 255]
-
-            # Show the area of the search window
-            # Creating the usable format for the fillpoly function.
-
-            left_line_window1 = np.array(
-                [np.transpose(np.vstack([left_fitx-self.margin, ploty]))])
-            left_line_window2 = np.array(
-                [np.flipud(np.transpose(np.vstack([left_fitx+self.margin, ploty])))])
-            left_line_pts = np.hstack((left_line_window1, left_line_window2))
-            right_line_window1 = np.array(
-                [np.transpose(np.vstack([right_fitx-self.margin, ploty]))])
-            right_line_window2 = np.array(
-                [np.flipud(np.transpose(np.vstack([right_fitx+self.margin, ploty])))])
-            right_line_pts = np.hstack(
-                (right_line_window1, right_line_window2))
-
-            cv2.fillPoly(window_image, np.int_([left_line_pts]), (0, 255, 0))
-            cv2.fillPoly(window_image, np.int_([right_line_pts]), (0, 255, 0))
-            result = cv2.addWeighted(out_img, 1, window_image, 0.3, 0)
-
             # Plot the figure with the sliding windows and the detected lanes.
             figure, axes = plt.subplots(3, 2)
             figure.set_size_inches(10, 10)
@@ -539,6 +667,7 @@ class Lane:
             axes[2][0].set_title("Detected Lane Lines with Sliding Windows")
             axes[1][1].set_title("Warped Frame")
             axes[2][1].set_title("Warped Frame With Search Window")
+
             plt.show()
 
     def histogram_peak(self, frame=None, plot=False):
@@ -703,10 +832,6 @@ class Lane:
         # Transform From Bird-eye view back to the original view
         self.new_warp = cv2.warpPerspective(
             self.colored_warp, self.inv_transformation_matrix, self.orig_image_size)
-
-        result = cv2.addWeighted(self.orig_frame, 1, self.new_warp, 0.3, 0)
-
-        return result
 
     def overlay_over_original_image(self, plot=False):
         """
