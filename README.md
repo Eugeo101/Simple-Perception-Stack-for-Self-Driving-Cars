@@ -12,7 +12,12 @@ sudo apt-get install python3-matplotlib
 sudo apt install python3-tqdm   
 
 ```
-You Add The Input video to the project folder and then run one these lines in terminal
+
+## YOLOv3 Wieghts
+please download the weights of YOLOv3-416 and add it into Yolo folder
+
+# Running the code
+Add The Input video to the project folder and then run one these lines in terminal
 ## No Debugging
 ```bash
 bash perception.sh input_video.mp4 ouput_video.mp4 yolo debug_mode=0  
