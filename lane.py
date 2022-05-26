@@ -4,6 +4,8 @@ import preprocessing as pre  # Handles the detection of lane lines
 import matplotlib.pyplot as plt  # Used for plotting and error checking
 import os
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 # Global variables
 prev_leftx = None
 prev_lefty = None

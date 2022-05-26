@@ -5,6 +5,7 @@ from lane import Lane
 import warnings
 from tqdm import tqdm
 import lane
+import cnn
 
 # To Ignore Warnings
 warnings.filterwarnings("ignore")
@@ -18,7 +19,7 @@ def rescale_frame(frame, percent=75):
     return cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
 
 # Contains The main Pipeline of the Program
-def main(input_video_path, output_video_path, debug_mode):
+def main(input_video_path, output_video_path, car_detection, debug_mode):
 
     # Setting the filename
     lane.filename = input_video_path
@@ -86,7 +87,14 @@ def main(input_video_path, output_video_path, debug_mode):
                 lane_obj.calculate_car_position()
 
                 # Display Filled Lanes, curvature and center offset on image
-                final_image = lane_obj.overlay_over_original_image()
+                image_with_lanes = lane_obj.overlay_over_original_image()
+
+                if car_detection == "yolo":
+                    # Running YOLOv3
+                    final_image = lane_obj.yolo_car_detection(image_with_lanes)
+                else:
+                    # Running Locally Trained CNN
+                    final_image = cnn.cnn_detect_cars(original_frame, image_with_lanes)
 
                 if debug_mode == '1':
                     # rescaling the stage images of the pipeline
@@ -153,8 +161,9 @@ input = sys.argv
 
 # Print Error Message If the debug mode is not specified
 try:
-    input_video_path, output_video_path, debug_mode = input[1:]
-    main(input_video_path, output_video_path, debug_mode)
+    input_video_path, output_video_path, car_detection, debug_mode = input[1:]
+    main(input_video_path, output_video_path,
+         car_detection.lower(), debug_mode)
     print("done\U0001F973\U0001F389")
 except Exception as e:
     print(e)
