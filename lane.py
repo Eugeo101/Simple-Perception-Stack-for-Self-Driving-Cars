@@ -2,7 +2,7 @@ import cv2  # Import the OpenCV library to enable computer vision
 import numpy as np  # Import the NumPy scientific computing library
 import preprocessing as pre  # Handles the detection of lane lines
 import matplotlib.pyplot as plt  # Used for plotting and error checking
-
+import os
 
 # Global variables
 prev_leftx = None
@@ -26,6 +26,23 @@ avg_offset = 0
 frame_count = 0
 
 filename = None
+
+# Yolo
+weights_path = os.path.join("Yolo", "yolov3.weights")
+# weights_path = os.path.join("Yolo", "yolov3_training_800.weights")
+config_path = os.path.join("Yolo", "yolov3.cfg")
+
+# loaded yolo weights and config
+net = cv2.dnn.readNetFromDarknet(config_path, weights_path)
+names = net.getLayerNames()
+
+layers_names = [names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
+
+# Labels Ready
+labels_path = os.path.join('Yolo', 'coco.names')
+labels = open(labels_path).read().strip().split('\n')
+# Model Done
+
 
 class Lane:
     """
@@ -215,7 +232,6 @@ class Lane:
             pre.show_image(result_yw, 'yellow or white result')
             plt.show()
 
-
         ###############################yellow or white image is output now get lane defination#################################
 
         ################### Isolate possible lane line edges ######################
@@ -323,7 +339,6 @@ class Lane:
 
         return self.lane_line_markings
 
-
     def Wrap_Presspective(self, frame=None, plot=False):
         """
         input: binary image
@@ -363,7 +378,7 @@ class Lane:
         if frame == None:
             frame = self.orig_frame.copy()
 
-        #cv2.polylines(image, [pts], isClosed, color, thickness)
+        # cv2.polylines(image, [pts], isClosed, color, thickness)
         roi_img = cv2.polylines(frame, np.int32(
             [self.roi_points]), True, (23, 14, 217), 3)
         self.roi_img = roi_img
@@ -378,7 +393,7 @@ class Lane:
 
     def sliding_windows(self, plot=False):
         """
-        Using the sliding windows technique, 
+        Using the sliding windows technique,
         indices of the lane lines pixels are obtained.
         """
 
@@ -573,7 +588,7 @@ class Lane:
         cv2.fillPoly(window_image, np.int_([left_line_pts]), (0, 255, 0))
         cv2.fillPoly(window_image, np.int_([right_line_pts]), (0, 255, 0))
         result = cv2.addWeighted(out_img, 1, window_image, 0.3, 0)
-        
+
         # Show The lines
         left_line_window1 = np.array(
             [np.transpose(np.vstack([left_fitx-3, ploty]))])
@@ -587,11 +602,11 @@ class Lane:
         right_line_pts = np.hstack(
             (right_line_window1, right_line_window2))
 
-        cv2.fillPoly(lane_line_img, np.int_([left_line_pts]), (0,255,255))
-        cv2.fillPoly(lane_line_img, np.int_([right_line_pts]),(0,255,255))
+        cv2.fillPoly(lane_line_img, np.int_([left_line_pts]), (0, 255, 255))
+        cv2.fillPoly(lane_line_img, np.int_([right_line_pts]), (0, 255, 255))
         self.warped_with_lines = cv2.addWeighted(
             result, 1, lane_line_img, 1, 0)
-    
+
         if plot == True:
             # Plot the figure with the sliding windows and the detected lanes.
             figure, axes = plt.subplots(3, 2)
@@ -733,7 +748,7 @@ class Lane:
 
     def fill_area_within_lanes(self):
         """
-            output: area within the lanes filled in nonWarped perspective 
+            output: area within the lanes filled in nonWarped perspective
                     and in the bird-eye view all in Black Background
         """
         # image to draw the lane lines on Considered as a plank channel
@@ -802,4 +817,72 @@ class Lane:
         if plot == True:
             cv2.imshow("Image with Curvature and Offset", image_copy)
 
+        return image_copy
+
+    def yolo_car_detection(self, frame=None, plot=False):
+        """
+        input: last image detected
+        output: cars detected-
+        """
+        global net, layers_names, labels
+        image_copy = None
+        if frame is None:
+            image_copy = self.orig_frame.copy()
+        else:
+            image_copy = frame
+
+        # forward pass
+        blob = cv2.dnn.blobFromImage(
+            image_copy, 1/255.0, (416, 416), crop=False, swapRB=False)  # input to NN
+        net.setInput(blob)  # pass input to NN 0.16sec + 0.67 -> 0.98
+        # forward pass to output names (prediction layers)
+        layers_output = net.forward(layers_names)
+        # get grid objects
+        boxes = []  # carry box cordinates x, y, width, height where x start from top left!!!!! as we wil draw using opencv
+        confidences = []  # percentage of neural network its cat by 91% msln
+        # what we detected !! (could be 3 means its car or 1 means its person) ht3rfhom mn coco.names!!
+        classIDs = []
+        # input is 3 layers each layer have many objects now i want objects which have confidence > 0.85 from these 3 output layers
+
+        # print(len(layers_output))
+        # print("32\n", len(layers_output[0]))
+        for output in layers_output:  # 3 arrays 82, 94, 106
+            # print(output.shape)
+            for detection in output:  # each array have alot rows so i get 1 row which has 85 columns
+                # get all class after pc, bx, by, bw, bh [0.6, 0.5, 0.8, 0.9, 0.4, .... 80 class]
+                scores = detection[5:]
+                # print(len(detection))
+                classID = np.argmax(scores)  # get postion index of max scores
+                confidence = scores[classID]
+                if confidence > 0.70:
+                    box = detection[:4] * \
+                        np.array([self.width, self.height,
+                                 self.width, self.height])
+                    bx, by, bw, bh = box.astype("int")
+                    x = int(bx - (bw/2))
+                    y = int(by - (bh/2))
+                    boxes.append([x, y, int(bw), int(bh)])
+                    confidences.append(float(confidence))
+                    classIDs.append(classID)
+
+        # get indecises after NMS
+        # confidence_thershold IOU_thershold (intersction_over_union)
+        idxs = cv2.dnn.NMSBoxes(boxes, confidences, 0.70, 0.5)
+        # check if there is detection else
+        if not (len(idxs) == 0):
+            for i in idxs.flatten():
+                (x, y) = [boxes[i][0], boxes[i][1]]
+                #     x, y = boxes[i][0:2]
+                #     print(x, '', y)
+                (w, h) = [boxes[i][2], boxes[i][3]]
+
+                # plot #BGR
+                cv2.rectangle(image_copy, (x, y),
+                              (x + w, y + h), (255, 255, 0), 2)
+                cv2.putText(image_copy, "{}: {:.2f}%".format(labels[classIDs[i]], confidences[i] * 100), (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX,
+                            0.5, (139, 139, 0), 2)  # BGR
+        # else wont do anything
+        if (plot == True):
+            cv2.imshow("Image", cv2.cvtColor(image_copy, cv2.COLOR_RGB2BGR))
+            cv2.waitKey(0)
         return image_copy

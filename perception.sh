@@ -9,4 +9,4 @@ debug_mode) x=$val;;
 esac
 done
 
-python3 pipeline.py $1 $2 $x
+python3 pipeline.py $1 $2 $3 $x
