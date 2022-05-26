@@ -1,9 +1,11 @@
 # Simple-Perception-Stack-for-Self-Driving-Cars
 
 ## Required Libraries
-`OpenCV, Matplotlib, Numpy, tqdm`
+`OpenCV, Matplotlib, Numpy, tqdm, Scipy, Tensorflow`
 To make sure you are fully equipped copy the following lines and paste them in terminal
 ```bash
+pip3 install tensorflow
+sudo apt-get install python3-scipy
 sudo apt install python3-opencv
 sudo apt install python-numpy
 sudo apt-get install python3-matplotlib
