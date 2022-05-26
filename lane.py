@@ -57,6 +57,8 @@ class Lane:
 
         :param orig_frame: Original camera image (i.e. frame)
         """
+        global filename
+        
         self.orig_frame = orig_frame
 
         # This will hold an image with the lane lines
@@ -117,11 +119,11 @@ class Lane:
             self.s_threshold = 10
             self.margin = int((1/48) * width)
         if (filename == 'project_video.mp4'):
-            self.roi_points = np.float32([(562, 441),  # Top-left corner
-                                          (310, 677),  # Bottom-left corner
-                                          (1079, 670),  # Bottom-right corner
-                                          (665, 442)  # Top-right corner
-                                          ])  # project
+                self.roi_points = np.float32([ (557, 462), # Top-left corner
+                                            (310, 677), # Bottom-left corner
+                                            (1079, 670), # Bottom-right corner
+                                            (779, 462) # Top-right corner
+                                            ])#project
         if (filename == 'harder_challenge_video.mp4'):
             self.roi_points = np.float32([(592, 500),  # Top-left corner
                                           (319, 684),  # Bottom-left corner
