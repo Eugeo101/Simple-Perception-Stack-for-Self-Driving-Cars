@@ -14,7 +14,7 @@ sudo apt install python3-tqdm
 ```
 
 ## YOLOv3 Wieghts
-please download the weights of `YOLOv3-416` and add it into `Yolo` folder
+please download the weights of `YOLOv3-416` from [Darknet](https://pjreddie.com/darknet/yolo/) and add it into `Yolo` folder 
 
 # Running the code
 Add The Input video to the project folder and then run one these lines in terminal
